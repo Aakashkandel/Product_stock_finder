@@ -1,0 +1,199 @@
+@import 'tailwindcss';
+
+/* ============================================================================
+   StockScout — Design System
+   Tailwind v4 CSS-first configuration. All design tokens live here so the
+   whole app speaks one visual language.
+   ========================================================================== */
+
+@theme {
+  /* -- Typography ---------------------------------------------------------- */
+  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-display: 'Instrument Serif', ui-serif, Georgia, serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* -- Brand ramp (teal/emerald: reads as "available", "go") --------------- */
+  --color-brand-50: #ecfdf7;
+  --color-brand-100: #d1fae9;
+  --color-brand-200: #a7f3d6;
+  --color-brand-300: #6ee7bd;
+  --color-brand-400: #34d3a0;
+  --color-brand-500: #10b981;
+  --color-brand-600: #059666;
+  --color-brand-700: #047852;
+  --color-brand-800: #065f43;
+  --color-brand-900: #064e36;
+
+  /* -- Ink ramp (warm-neutral charcoals, not pure grey) -------------------- */
+  --color-ink-50: #f7f8f8;
+  --color-ink-100: #eceef0;
+  --color-ink-200: #d6dade;
+  --color-ink-300: #b2babf;
+  --color-ink-400: #858f97;
+  --color-ink-500: #64707a;
+  --color-ink-600: #4c5761;
+  --color-ink-700: #3c454e;
+  --color-ink-800: #242b31;
+  --color-ink-900: #171c21;
+  --color-ink-950: #0d1114;
+
+  /* -- Semantic stock states ----------------------------------------------- */
+  --color-stock-in: #10b981;
+  --color-stock-low: #f59e0b;
+  --color-stock-out: #ef4444;
+  --color-stock-unknown: #8b95a1;
+
+  /* -- Motion -------------------------------------------------------------- */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  --animate-rise: rise 0.6s var(--ease-out-expo) both;
+  --animate-fade: fade 0.4s ease-out both;
+  --animate-shimmer: shimmer 1.8s linear infinite;
+  --animate-pulse-ring: pulse-ring 2.4s var(--ease-out-expo) infinite;
+  --animate-drift: drift 22s ease-in-out infinite alternate;
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(14px) scale(0.985); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes shimmer {
+  from { background-position: -180% 0; }
+  to   { background-position: 180% 0; }
+}
+@keyframes pulse-ring {
+  0%   { opacity: 0.55; transform: scale(1); }
+  70%  { opacity: 0;    transform: scale(2.4); }
+  100% { opacity: 0;    transform: scale(2.4); }
+}
+@keyframes drift {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  to   { transform: translate3d(4%, -6%, 0) scale(1.12); }
+}
+
+/* ============================================================================
+   Theme surfaces — semantic vars flip between light and dark.
+   Light is the default; `.dark` on <html> swaps the palette.
+   ========================================================================== */
+@layer base {
+  :root {
+    --surface-canvas: var(--color-ink-50);
+    --surface-raised: #ffffff;
+    --surface-sunken: #f1f3f5;
+    --surface-overlay: rgba(255, 255, 255, 0.82);
+    --hairline: rgba(23, 28, 33, 0.09);
+    --hairline-strong: rgba(23, 28, 33, 0.16);
+    --text-primary: var(--color-ink-900);
+    --text-secondary: var(--color-ink-600);
+    --text-tertiary: var(--color-ink-400);
+    --glow-a: rgba(16, 185, 129, 0.20);
+    --glow-b: rgba(56, 189, 248, 0.16);
+    --shadow-card: 0 1px 2px rgba(16, 24, 40, 0.04), 0 8px 24px -12px rgba(16, 24, 40, 0.14);
+    --shadow-lift: 0 2px 4px rgba(16, 24, 40, 0.05), 0 20px 44px -16px rgba(16, 24, 40, 0.22);
+    color-scheme: light;
+  }
+
+  .dark {
+    --surface-canvas: #0a0d10;
+    --surface-raised: #13181d;
+    --surface-sunken: #0f1418;
+    --surface-overlay: rgba(19, 24, 29, 0.82);
+    --hairline: rgba(255, 255, 255, 0.09);
+    --hairline-strong: rgba(255, 255, 255, 0.17);
+    --text-primary: #eef1f4;
+    --text-secondary: #9aa5b0;
+    --text-tertiary: #6b7681;
+    --glow-a: rgba(16, 185, 129, 0.26);
+    --glow-b: rgba(56, 189, 248, 0.18);
+    --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4), 0 10px 30px -14px rgba(0, 0, 0, 0.7);
+    --shadow-lift: 0 2px 6px rgba(0, 0, 0, 0.45), 0 24px 50px -18px rgba(0, 0, 0, 0.8);
+    color-scheme: dark;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--surface-canvas);
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'ss01';
+  }
+
+  /* Numbers in prices/counts should never jitter as they update. */
+  .tabular { font-variant-numeric: tabular-nums; }
+
+  ::selection {
+    background: var(--color-brand-400);
+    color: #05110c;
+  }
+
+  /* One consistent focus treatment everywhere. */
+  :where(a, button, input, select, textarea, [tabindex]):focus-visible {
+    outline: 2px solid var(--color-brand-500);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+/* ============================================================================
+   Component primitives
+   ========================================================================== */
+@layer components {
+  .surface {
+    background-color: var(--surface-raised);
+    border: 1px solid var(--hairline);
+    box-shadow: var(--shadow-card);
+  }
+
+  .hairline { border-color: var(--hairline); }
+
+  /* Frosted panel used for the sticky header and modals. */
+  .frost {
+    background-color: var(--surface-overlay);
+    backdrop-filter: saturate(180%) blur(18px);
+    -webkit-backdrop-filter: saturate(180%) blur(18px);
+  }
+
+  /* Skeleton shimmer that adapts to either theme. */
+  .skeleton {
+    background-image: linear-gradient(
+      90deg,
+      var(--surface-sunken) 0%,
+      var(--hairline) 45%,
+      var(--surface-sunken) 90%
+    );
+    background-size: 220% 100%;
+    animation: var(--animate-shimmer);
+  }
+
+  /* Thin, unobtrusive scrollbars inside dropdown lists. */
+  .scroll-slim {
+    scrollbar-width: thin;
+    scrollbar-color: var(--hairline-strong) transparent;
+  }
+  .scroll-slim::-webkit-scrollbar { width: 8px; height: 8px; }
+  .scroll-slim::-webkit-scrollbar-thumb {
+    background: var(--hairline-strong);
+    border-radius: 99px;
+  }
+  .scroll-slim::-webkit-scrollbar-track { background: transparent; }
+}
