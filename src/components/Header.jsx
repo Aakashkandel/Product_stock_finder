@@ -1,58 +1,39 @@
-import { SparkIcon, SunIcon, MoonIcon, KeyIcon, BagIcon } from './Icons.jsx'
+import { SunIcon, MoonIcon } from './Icons.jsx'
 
-/** Sticky frosted top bar: brand, live AI status, theme toggle, settings. */
-export default function Header({ theme, onToggleTheme, onOpenSettings, hasKey, onGoHome }) {
+/**
+ * Top bar: wordmark, theme.
+ *
+ * The API key lives behind /setup-api, so there is deliberately no settings
+ * affordance here for visitors to find, and no indicator of whether live
+ * lookups are configured — that distinction is not the visitor's concern.
+ */
+export default function Header({ theme, onToggleTheme, onGoHome }) {
   return (
-    <header className="sticky top-0 z-40 frost border-b" style={{ borderColor: 'var(--hairline)' }}>
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
-        <button
-          onClick={onGoHome}
-          className="group flex items-center gap-2.5 rounded-lg text-left"
-          aria-label="StockScout home"
-        >
-          <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-brand-400 to-brand-600 text-ink-950 shadow-lg shadow-brand-500/25 transition-transform duration-300 group-hover:scale-105">
-            <BagIcon size={18} />
+    <header className="above-grain sticky top-0 z-40 frost border-b" style={{ borderColor: 'var(--hairline)' }}>
+      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-5 sm:px-6">
+        <button onClick={onGoHome} className="group flex items-center gap-2.5 text-left">
+          {/* Wordmark mark: a volt square with the bag cut out of it. */}
+          <span
+            className="grid h-8 w-8 place-items-center rounded-[10px] transition-transform duration-300 group-hover:-rotate-6"
+            style={{ background: 'var(--accent)' }}
+          >
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M5 8.5h14l-1 11a1.8 1.8 0 0 1-1.8 1.6H7.8A1.8 1.8 0 0 1 6 19.5Z" stroke="var(--accent-ink)" strokeWidth="1.9" strokeLinejoin="round" />
+              <path d="M9 8.5V6a3 3 0 0 1 6 0v2.5" stroke="var(--accent-ink)" strokeWidth="1.9" strokeLinecap="round" />
+            </svg>
           </span>
-          <span className="flex flex-col leading-none">
-            <span className="text-[15px] font-bold tracking-tight">StockScout</span>
-            <span className="mt-0.5 hidden text-[10px] font-medium uppercase tracking-[0.14em] text-[var(--text-tertiary)] sm:block">
-              Local stock, found fast
-            </span>
+          <span className="font-display text-[19px] font-extrabold leading-none tracking-[-0.03em]">
+            StockScout
           </span>
         </button>
 
-        <div className="flex items-center gap-2">
-          {/* Connection state doubles as the affordance to add a key. */}
-          <button
-            onClick={onOpenSettings}
-            className="hidden items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold ring-1 ring-inset transition-colors sm:inline-flex"
-            style={{
-              color: hasKey ? 'var(--color-brand-600)' : 'var(--text-secondary)',
-              background: hasKey ? 'rgba(16,185,129,0.10)' : 'var(--surface-sunken)',
-              borderColor: 'transparent',
-            }}
-            title={hasKey ? 'Qwen AI connected' : 'Running on demo data'}
-          >
-            <SparkIcon size={14} />
-            {hasKey ? 'AI connected' : 'Demo mode'}
-          </button>
-
-          <button
-            onClick={onOpenSettings}
-            aria-label="Settings and API key"
-            className="grid h-9 w-9 place-items-center rounded-xl text-[var(--text-secondary)] ring-1 ring-inset transition-colors hover:text-[var(--text-primary)]"
-            style={{ borderColor: 'transparent', background: 'var(--surface-sunken)' }}
-          >
-            <KeyIcon size={17} />
-          </button>
-
+        <div className="flex items-center gap-3">
           <button
             onClick={onToggleTheme}
             aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`}
-            className="grid h-9 w-9 place-items-center rounded-xl text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]"
-            style={{ background: 'var(--surface-sunken)' }}
+            className="btn-ghost grid h-9 w-9 place-items-center rounded-full"
           >
-            {theme === 'dark' ? <SunIcon size={17} /> : <MoonIcon size={17} />}
+            {theme === 'dark' ? <SunIcon size={16} /> : <MoonIcon size={16} />}
           </button>
         </div>
       </div>

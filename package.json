@@ -1,17 +1,25 @@
 {
-  "name": "product_stock_finder",
+  "name": "stockscout",
   "version": "1.0.0",
-  "description": "AI-Powered Local Product Stock Finder Web App",
-  "main": "index.js",
+  "description": "AI-powered local product stock finder — a static React site backed by Qwen 2.5 72B.",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview --port 4173",
+    "hash-password": "node scripts/hash-password.mjs"
   },
-  "keywords": [],
+  "keywords": [
+    "stock-finder",
+    "local-inventory",
+    "react",
+    "vite",
+    "tailwindcss",
+    "openrouter",
+    "qwen"
+  ],
   "author": "",
-  "license": "ISC",
-  "type": "commonjs",
+  "license": "MIT",
+  "type": "module",
   "dependencies": {
     "react": "^19.3.0",
     "react-dom": "^19.3.0"
@@ -21,5 +29,9 @@
     "@vitejs/plugin-react": "^1.0.0",
     "tailwindcss": "^4.3.3",
     "vite": "^6.2.0"
+  },
+  "private": true,
+  "engines": {
+    "node": ">=18"
   }
 }

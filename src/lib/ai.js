@@ -1,25 +1,36 @@
 /**
- * OpenRouter client for `qwen/qwen-2.5-72b-instruct:free`.
+ * OpenRouter client for `nvidia/nemotron-3-super-120b-a12b:free`.
+ *
+ * OpenRouter's free-model roster changes without notice — providers retire or
+ * re-price a `:free` slug and the API starts returning a 4xx telling you to
+ * switch to the paid version (this happened to the Qwen model this app used
+ * to call). If that happens again, swap MODEL below for another entry from
+ * https://openrouter.ai/api/v1/models whose id ends in `:free` and whose
+ * `supported_parameters` includes `response_format` — this app always asks
+ * for `response_format: { type: 'json_object' }`, and a model that doesn't
+ * support it will reliably reply with prose our parser then has to guess at.
  *
  * The app is a static site, so the request goes straight from the browser to
  * OpenRouter using a key the user supplies (stored only in their own
  * localStorage). A build-time `VITE_OPENROUTER_API_KEY` is also honoured for
  * private deployments.
  *
- * Every failure path falls back to deterministic demo data, so a search always
- * renders something useful.
+ * This client NEVER fabricates results. If a key is missing, the request
+ * fails, or the model's reply can't be parsed, `findStock` returns no data and
+ * a plain-language reason — the UI shows an honest error state instead of
+ * inventing stores. Real listings only ever come from a real model response.
  */
 
 import { getApiKey } from './storage.js'
 import { getCountry } from './locations.js'
-import { generateMockResults } from './mockData.js'
+import { extractJson, normalize } from './parse.js'
 
-export const MODEL = 'qwen/qwen-2.5-72b-instruct:free'
+export const MODEL = 'nvidia/nemotron-3-super-120b-a12b:free'
 const ENDPOINT = 'https://openrouter.ai/api/v1/chat/completions'
 const TIMEOUT_MS = 45000
 
 /** Resolves the key from user settings first, then the build-time env var. */
-export function resolveApiKey() {
+function resolveApiKey() {
   return getApiKey() || import.meta.env.VITE_OPENROUTER_API_KEY || ''
 }
 
@@ -72,91 +83,10 @@ Local date: ${new Date().toISOString().slice(0, 10)}
 Find where this product is in stock in this area right now.`
 }
 
-/**
- * Pulls a JSON object out of a model response that may be wrapped in prose or
- * markdown fences. Returns null if nothing parseable is present.
- */
-function extractJson(text) {
-  if (!text) return null
-
-  const attempts = []
-  attempts.push(text.trim())
-
-  const fenced = text.match(/```(?:json)?\s*([\s\S]*?)```/i)
-  if (fenced) attempts.push(fenced[1].trim())
-
-  // Widest brace span — handles leading/trailing chatter.
-  const first = text.indexOf('{')
-  const last = text.lastIndexOf('}')
-  if (first !== -1 && last > first) attempts.push(text.slice(first, last + 1))
-
-  for (const candidate of attempts) {
-    try {
-      const parsed = JSON.parse(candidate)
-      if (parsed && typeof parsed === 'object') return parsed
-    } catch {
-      /* try the next candidate */
-    }
-  }
-  return null
-}
-
-const VALID_STATUS = new Set(['in_stock', 'low_stock', 'out_of_stock'])
-
-/** Coerces a model price ("$1,299.00", "1299 USD") into a number. */
-function toNumber(value) {
-  if (typeof value === 'number' && Number.isFinite(value)) return value
-  if (typeof value !== 'string') return null
-  const cleaned = value.replace(/[^\d.]/g, '')
-  const n = parseFloat(cleaned)
-  return Number.isFinite(n) ? n : null
-}
-
-/**
- * Normalises raw model output into the exact shape the UI renders.
- * Anything malformed is dropped rather than allowed to crash a card.
- */
-function normalize(raw, query) {
-  const country = getCountry(query.countryCode)
-  const rawStores = Array.isArray(raw?.stores) ? raw.stores : []
-
-  const stores = rawStores
-    .filter((s) => s && typeof s.name === 'string' && s.name.trim())
-    .map((s) => {
-      const status = VALID_STATUS.has(s.status) ? s.status : 'unknown'
-      const confidence = toNumber(s.confidence)
-      return {
-        name: String(s.name).trim(),
-        branch: s.branch ? String(s.branch).trim() : '',
-        address: s.address ? String(s.address).trim() : query.area,
-        status,
-        quantityHint: s.quantityHint ? String(s.quantityHint).trim() : '',
-        price: toNumber(s.price),
-        hours: s.hours ? String(s.hours).trim() : '',
-        phone: s.phone ? String(s.phone).trim() : null,
-        distanceKm: toNumber(s.distanceKm),
-        confidence: confidence === null ? null : Math.max(0, Math.min(100, Math.round(confidence))),
-        note: s.note ? String(s.note).trim() : '',
-      }
-    })
-
-  if (!stores.length) throw new Error('The model returned no usable store data.')
-
-  return {
-    demo: false,
-    query,
-    summary: typeof raw.summary === 'string' ? raw.summary.trim() : '',
-    tip: typeof raw.tip === 'string' ? raw.tip.trim() : '',
-    stores,
-    generatedAt: Date.now(),
-    currency: country.currency,
-  }
-}
-
 /** Maps an HTTP status from OpenRouter to a message a user can act on. */
 function describeHttpError(status, body) {
-  if (status === 401) return 'That OpenRouter key was rejected. Check it in Settings.'
-  if (status === 402) return 'Your OpenRouter account is out of credit for this model.'
+  if (status === 401) return 'The configured OpenRouter key was rejected. Update it at /setup-api.'
+  if (status === 402) return 'The OpenRouter account behind this site is out of credit for this model.'
   if (status === 429) return 'Rate limited by OpenRouter — the free model is busy. Try again shortly.'
   if (status >= 500) return 'OpenRouter is having trouble right now. Try again in a moment.'
   const detail = body?.error?.message
@@ -164,19 +94,23 @@ function describeHttpError(status, body) {
 }
 
 /**
- * Runs a stock lookup.
+ * Runs a stock lookup against the live model. Always resolves — never
+ * rejects — with `{ data, error }`:
  *
- * Always resolves — never rejects — with `{ data, usedFallback, notice }` so
- * the caller can render results and explain any degradation in one pass.
+ *   - success:      { data: <normalized result>, error: null }
+ *   - any failure:  { data: null, error: '<plain-language reason>' }
+ *
+ * There is no fallback data path. A failed or unconfigured lookup returns no
+ * stores at all, so the caller can show a genuine error state rather than
+ * display anything invented.
  */
 export async function findStock(query, { signal } = {}) {
   const apiKey = resolveApiKey()
 
   if (!apiKey) {
     return {
-      data: generateMockResults(query),
-      usedFallback: true,
-      notice: 'Showing demo results — add a free OpenRouter API key in Settings for real AI lookups.',
+      data: null,
+      error: 'Live lookups are not configured for this site yet. Set an API key at /setup-api.',
     }
   }
 
@@ -217,25 +151,21 @@ export async function findStock(query, { signal } = {}) {
     const payload = await response.json()
     const content = payload?.choices?.[0]?.message?.content
     const parsed = extractJson(content)
-    if (!parsed) throw new Error('The AI response could not be read as JSON.')
+    if (!parsed) throw new Error('The AI response could not be read as JSON. Try again.')
 
-    return { data: normalize(parsed, query), usedFallback: false, notice: '' }
+    return { data: normalize(parsed, query), error: null }
   } catch (error) {
-    // A user-initiated cancel is not an error worth reporting.
+    // A user-initiated cancel is not a failure worth reporting.
     if (error.name === 'AbortError' && signal?.aborted) {
-      return { data: null, usedFallback: false, notice: '', cancelled: true }
+      return { data: null, error: null, cancelled: true }
     }
 
     const message =
       error.name === 'AbortError'
-        ? 'The AI took too long to respond.'
-        : error.message || 'Could not reach the AI service.'
+        ? 'The AI took too long to respond. Try again.'
+        : error.message || 'Could not reach the AI service. Try again.'
 
-    return {
-      data: generateMockResults(query),
-      usedFallback: true,
-      notice: `${message} Showing demo results instead.`,
-    }
+    return { data: null, error: message }
   } finally {
     clearTimeout(timer)
     signal?.removeEventListener('abort', onAbort)

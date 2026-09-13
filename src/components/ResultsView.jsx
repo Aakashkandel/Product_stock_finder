@@ -4,9 +4,11 @@ import SkeletonCard from './SkeletonCard.jsx'
 import FilterBar from './FilterBar.jsx'
 import AdSlot from './AdSlot.jsx'
 import SearchPanel from './SearchPanel.jsx'
-import { ArrowLeftIcon, SparkIcon, AlertIcon, RefreshIcon, TagIcon } from './Icons.jsx'
+import { ArrowLeftIcon, AlertIcon, RefreshIcon, CopyIcon, CheckIcon } from './Icons.jsx'
 import { getCountry } from '../lib/locations.js'
 import { formatPrice, storeId } from '../lib/format.js'
+import { shareUrlFor } from '../lib/url.js'
+import { copyText } from '../lib/maps.js'
 
 /** Status lines cycled through while the model is thinking. */
 const LOADING_STEPS = [
@@ -20,16 +22,44 @@ const STATUS_RANK = { in_stock: 0, low_stock: 1, unknown: 2, out_of_stock: 3 }
 
 function Stat({ label, value, accent }) {
   return (
-    <div
-      className="rounded-xl px-4 py-3 ring-1 ring-inset"
-      style={{ background: 'var(--surface-raised)', borderColor: 'var(--hairline)' }}
-    >
-      <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--text-tertiary)]">
+    <div className="flex-1 px-4 py-3 first:pl-0">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--text-3)]">
         {label}
       </p>
-      <p className={`tabular mt-1 text-xl font-bold tracking-tight ${accent ? 'text-brand-500' : ''}`}>
+      <p
+        className="tabular mt-1 font-display text-[22px] leading-none"
+        style={accent ? { color: 'var(--accent)' } : undefined}
+      >
         {value}
       </p>
+    </div>
+  )
+}
+
+/**
+ * Shown in place of results whenever there is no real data to display — no
+ * key configured, a rejected request, a timeout, or a reply the parser
+ * couldn't read. Nothing here is invented: the message states plainly what
+ * went wrong, and the only action offered is to try the real lookup again.
+ */
+function ErrorState({ message, onRetry }) {
+  return (
+    <div className="card mt-8 flex flex-col items-center gap-4 px-6 py-16 text-center">
+      <span
+        className="grid h-11 w-11 place-items-center rounded-full"
+        style={{ background: 'var(--sunken)', color: 'var(--stock-low)' }}
+      >
+        <AlertIcon size={20} />
+      </span>
+      <div>
+        <p className="font-display text-[19px] font-bold tracking-tight">Couldn't get real results</p>
+        <p className="mx-auto mt-2 max-w-sm text-[14px] leading-relaxed text-[var(--text-2)]">
+          {message}
+        </p>
+      </div>
+      <button onClick={onRetry} className="btn-primary mt-2 inline-flex items-center gap-2 px-6 py-3 text-sm">
+        <RefreshIcon size={15} /> Try again
+      </button>
     </div>
   )
 }
@@ -48,10 +78,12 @@ export default function ResultsView({
 }) {
   const [filter, setFilter] = useState('all')
   const [sort, setSort] = useState('relevance')
+  const [shared, setShared] = useState(false)
 
   const stores = result?.stores || []
   const countryCode = result?.query.countryCode || searchProps.countryCode
   const country = getCountry(countryCode)
+  const failed = !loading && !result
 
   const counts = useMemo(
     () => ({
@@ -100,93 +132,97 @@ export default function ResultsView({
   }, [stores])
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-      {/* Back + compact re-search */}
-      <button
-        onClick={onBack}
-        className="mb-5 inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--text-secondary)] transition-colors hover:text-brand-600"
-      >
-        <ArrowLeftIcon size={16} /> New search
-      </button>
+    <div className="above-grain mx-auto max-w-6xl px-5 py-8 sm:px-6">
+      {/* Back + share + compact re-search */}
+      <div className="mb-5 flex items-center justify-between gap-3">
+        <button
+          onClick={onBack}
+          className="inline-flex items-center gap-1.5 text-sm text-[var(--text-2)] transition-colors hover:text-[var(--text)]"
+        >
+          <ArrowLeftIcon size={16} /> New search
+        </button>
+
+        {result && (
+          <button
+            onClick={async () => {
+              const url = shareUrlFor(result.query)
+              // Use the native share sheet where it exists, else copy the link.
+              if (navigator.share) {
+                try {
+                  await navigator.share({ title: `Stock for ${result.query.product}`, url })
+                  return
+                } catch {
+                  /* user dismissed the sheet, or it is unavailable — fall through */
+                }
+              }
+              const ok = await copyText(url)
+              if (ok) {
+                setShared(true)
+                setTimeout(() => setShared(false), 2000)
+              } else {
+                onToast({ type: 'error', message: 'Could not copy the link.' })
+              }
+            }}
+            className="inline-flex items-center gap-1.5 text-[13px] text-[var(--text-2)] underline underline-offset-4 transition-colors hover:text-[var(--text)]"
+          >
+            {shared ? <CheckIcon size={14} /> : <CopyIcon size={14} />}
+            {shared ? 'Link copied' : 'Share'}
+          </button>
+        )}
+      </div>
 
       <SearchPanel {...searchProps} compact />
 
       {/* Query heading */}
       <div className="mt-8">
-        <h1 className="text-2xl font-bold tracking-tight sm:text-[28px]">
-          {loading ? 'Searching' : `${counts.all} store${counts.all === 1 ? '' : 's'}`} for{' '}
-          <span className="text-brand-500">{searchProps.product || result?.query.product}</span>
+        <h1 className="font-display text-[26px] leading-tight tracking-tight sm:text-[32px]">
+          {loading ? 'Searching for ' : failed ? "Couldn't search for " : `${counts.all} shop${counts.all === 1 ? '' : 's'} for `}
+          <span style={{ color: 'var(--accent)' }}>
+            {searchProps.product || result?.query.product}
+          </span>
         </h1>
-        <p className="mt-1 flex items-center gap-1.5 text-sm text-[var(--text-secondary)]">
-          <span aria-hidden="true">{country.flag}</span>
-          {result?.query.area || searchProps.area}, {country.name}
+        <p className="mt-2 text-[14px] text-[var(--text-2)]">
+          {result?.query.area || searchProps.area} · {country.name}
         </p>
       </div>
 
-      {/* Degradation notice — demo data, rate limit, timeout, etc. */}
-      {notice && !loading && (
-        <div
-          className="mt-5 flex items-start gap-3 rounded-xl px-4 py-3 ring-1 ring-inset ring-amber-500/25"
-          style={{ background: 'rgba(245,158,11,0.08)' }}
-          role="status"
-        >
-          <AlertIcon size={17} className="mt-0.5 shrink-0 text-amber-500" />
-          <p className="text-[13px] leading-relaxed text-[var(--text-secondary)]">{notice}</p>
-          <button
-            onClick={onRetry}
-            className="ml-auto inline-flex shrink-0 items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-[var(--text-secondary)] transition-colors hover:text-brand-600"
-          >
-            <RefreshIcon size={14} /> Retry
-          </button>
-        </div>
-      )}
-
       {/* Live region so screen readers hear progress and completion. */}
       <p className="sr-only" role="status" aria-live="polite">
-        {loading ? LOADING_STEPS[loadingStep] : `${counts.all} results loaded.`}
+        {loading ? LOADING_STEPS[loadingStep] : failed ? 'Search failed.' : `${counts.all} results loaded.`}
       </p>
 
       {loading ? (
         <>
-          <div
-            className="mt-6 flex items-center gap-3 rounded-xl px-4 py-3.5 ring-1 ring-inset ring-brand-500/20"
-            style={{ background: 'rgba(16,185,129,0.07)' }}
-          >
-            <SparkIcon size={18} className="shrink-0 animate-pulse text-brand-500" />
-            <span className="text-sm font-medium text-[var(--text-secondary)]">
-              {LOADING_STEPS[loadingStep]}
-            </span>
+          <div className="mt-6 flex items-center gap-2.5 text-sm text-[var(--text-2)]">
+            <span className="h-3.5 w-3.5 shrink-0 animate-spin rounded-full border-2 border-current border-t-transparent opacity-50" />
+            {LOADING_STEPS[loadingStep]}
           </div>
-          <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {Array.from({ length: 6 }, (_, i) => <SkeletonCard key={i} index={i} />)}
           </div>
         </>
+      ) : failed ? (
+        <ErrorState message={notice} onRetry={onRetry} />
       ) : (
         <>
           {/* AI summary + at-a-glance stats */}
           {result?.summary && (
-            <div
-              className="mt-6 rounded-2xl p-5 ring-1 ring-inset ring-brand-500/15"
-              style={{ background: 'rgba(16,185,129,0.06)' }}
-            >
-              <h2 className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.14em] text-brand-600 dark:text-brand-400">
-                <SparkIcon size={14} /> AI summary
-              </h2>
-              <p className="mt-2 text-[15px] leading-relaxed text-[var(--text-primary)]">
+            <div className="card relative mt-7 overflow-hidden p-5 pl-6">
+              <span aria-hidden="true" className="absolute inset-y-0 left-0 w-[3px]" style={{ background: 'var(--accent)' }} />
+              <p className="text-[15.5px] leading-[1.6] text-[var(--text)]">
                 {result.summary}
               </p>
               {result.tip && (
-                <p className="mt-3 flex items-start gap-2 border-t pt-3 text-[13px] leading-relaxed text-[var(--text-secondary)]" style={{ borderColor: 'var(--hairline)' }}>
-                  <TagIcon size={14} className="mt-0.5 shrink-0 text-brand-500" />
+                <p className="mt-3 border-t pt-3 text-[13.5px] leading-relaxed text-[var(--text-2)]" style={{ borderColor: 'var(--hairline)' }}>
                   {result.tip}
                 </p>
               )}
             </div>
           )}
 
-          <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div className="mt-7 grid grid-cols-2 gap-3 sm:grid-cols-4">
             <Stat label="Available" value={`${counts.in_stock + counts.low_stock}/${counts.all}`} />
-            <Stat label="Best price" value={bestPrice === null ? '—' : formatPrice(bestPrice, countryCode)} accent />
+            <Stat label="Cheapest" value={bestPrice === null ? '—' : formatPrice(bestPrice, countryCode)} accent />
             <Stat label="In stock" value={counts.in_stock} />
             <Stat label="Low stock" value={counts.low_stock} />
           </div>
@@ -195,25 +231,25 @@ export default function ResultsView({
             <AdSlot variant="leaderboard" />
           </div>
 
-          <div className="mt-7">
+          <div className="mt-8">
             <FilterBar filter={filter} setFilter={setFilter} sort={sort} setSort={setSort} counts={counts} />
           </div>
 
           {visible.length === 0 ? (
-            <div className="mt-10 rounded-2xl px-6 py-16 text-center ring-1 ring-inset" style={{ borderColor: 'var(--hairline)', background: 'var(--surface-raised)' }}>
-              <p className="text-base font-semibold">Nothing matches this filter</p>
-              <p className="mt-1.5 text-sm text-[var(--text-secondary)]">
+            <div className="mt-12 py-16 text-center">
+              <p className="font-display text-[22px] font-bold tracking-tight">Nothing matches this filter</p>
+              <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-[var(--text-2)]">
                 Try another availability filter, or search a nearby district.
               </p>
               <button
                 onClick={() => setFilter('all')}
-                className="mt-5 rounded-xl bg-brand-500 px-5 py-2.5 text-sm font-bold text-ink-950 transition-colors hover:bg-brand-400"
+                className="btn-primary mt-6 px-6 py-3 text-sm"
               >
-                Show all stores
+                Show all shops
               </button>
             </div>
           ) : (
-            <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {visible.map((store, i) => (
                 <Fragment key={`${storeId(store)}-${i}`}>
                   <StoreCard
@@ -228,7 +264,7 @@ export default function ResultsView({
                     onToast={onToast}
                   />
                   {/* Native ad woven into the feed, never above the first result. */}
-                  {i === 2 && visible.length > 4 && <AdSlot variant="inline" className="sm:col-span-2 xl:col-span-1" />}
+                  {i === 2 && visible.length > 4 && <AdSlot variant="inline" className="sm:col-span-2 lg:col-span-1" />}
                 </Fragment>
               ))}
             </div>

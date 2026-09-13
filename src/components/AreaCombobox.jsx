@@ -63,8 +63,10 @@ export default function AreaCombobox({ value, onChange, areas, id = 'area' }) {
   }
 
   return (
-    <div ref={wrapRef} className="relative">
-      <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)]">
+    // `z-40` while open lifts the field (and its list) above the content that
+    // follows it; without it the popular-product chips paint over the dropdown.
+    <div ref={wrapRef} className={`field relative ${open ? 'z-40' : 'z-0'}`}>
+      <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--text-3)]">
         <PinIcon size={18} />
       </span>
 
@@ -86,8 +88,7 @@ export default function AreaCombobox({ value, onChange, areas, id = 'area' }) {
         }}
         onFocus={() => setOpen(true)}
         onKeyDown={handleKeyDown}
-        className="w-full rounded-xl border bg-transparent py-3.5 pl-11 pr-9 text-[15px] outline-none transition-shadow placeholder:text-[var(--text-tertiary)] focus:ring-2 focus:ring-brand-500/40"
-        style={{ background: 'var(--surface-sunken)', borderColor: 'var(--hairline)' }}
+        className="w-full bg-transparent py-3.5 pl-11 pr-9 text-[15px] font-medium outline-none placeholder:font-normal placeholder:text-[var(--text-3)]"
       />
 
       <button
@@ -95,7 +96,7 @@ export default function AreaCombobox({ value, onChange, areas, id = 'area' }) {
         tabIndex={-1}
         aria-label={open ? 'Hide area suggestions' : 'Show area suggestions'}
         onClick={() => setOpen((o) => !o)}
-        className={`absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-[var(--text-tertiary)] transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
+        className={`absolute right-3 top-1/2 -translate-y-1/2 p-1 text-[var(--text-3)] transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
       >
         <ChevronIcon size={16} />
       </button>
@@ -106,15 +107,15 @@ export default function AreaCombobox({ value, onChange, areas, id = 'area' }) {
           ref={listRef}
           role="listbox"
           aria-label="Popular areas"
-          className="scroll-slim absolute z-30 mt-2 max-h-64 w-full overflow-y-auto rounded-xl border p-1.5 shadow-xl animate-[fade_0.15s_ease-out_both]"
+          className="scroll-slim absolute z-50 mt-2 max-h-64 w-full overflow-y-auto rounded-2xl border p-1.5 animate-[fade_0.14s_ease-out_both]"
           style={{
-            background: 'var(--surface-raised)',
+            background: 'var(--raised)',
             borderColor: 'var(--hairline)',
-            boxShadow: 'var(--shadow-lift)',
+            boxShadow: 'var(--shadow-lg)',
           }}
         >
           {filtered.length === 0 ? (
-            <li className="px-3 py-2.5 text-sm text-[var(--text-tertiary)]">
+            <li className="px-3 py-2.5 text-sm text-[var(--text-3)]">
               No match — press Find Stock to search "{value}" anyway.
             </li>
           ) : (
@@ -128,9 +129,12 @@ export default function AreaCombobox({ value, onChange, areas, id = 'area' }) {
                 onMouseEnter={() => setActive(i)}
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={() => commit(area)}
-                className={`cursor-pointer rounded-lg px-3 py-2.5 text-sm transition-colors ${
-                  i === active ? 'bg-brand-500/12 text-brand-700 dark:text-brand-300' : 'text-[var(--text-secondary)]'
-                }`}
+                className="cursor-pointer rounded-xl px-3 py-2.5 text-sm font-medium transition-colors"
+                style={
+                  i === active
+                    ? { background: 'var(--accent)', color: 'var(--accent-ink)' }
+                    : { color: 'var(--text-2)' }
+                }
               >
                 {area}
               </li>

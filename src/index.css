@@ -2,146 +2,158 @@
 
 /* ============================================================================
    StockScout — Design System
-   Tailwind v4 CSS-first configuration. All design tokens live here so the
-   whole app speaks one visual language.
+
+   Loud where it counts, quiet everywhere else. A single electric accent does
+   the shouting; everything behind it is deep, layered neutral. Type carries
+   the personality: Bricolage Grotesque for display, Inter for interface.
    ========================================================================== */
 
 @theme {
-  /* -- Typography ---------------------------------------------------------- */
   --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-display: 'Instrument Serif', ui-serif, Georgia, serif;
+  --font-display: 'Bricolage Grotesque', 'Inter', ui-sans-serif, system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
 
-  /* -- Brand ramp (teal/emerald: reads as "available", "go") --------------- */
-  --color-brand-50: #ecfdf7;
-  --color-brand-100: #d1fae9;
-  --color-brand-200: #a7f3d6;
-  --color-brand-300: #6ee7bd;
-  --color-brand-400: #34d3a0;
-  --color-brand-500: #10b981;
-  --color-brand-600: #059666;
-  --color-brand-700: #047852;
-  --color-brand-800: #065f43;
-  --color-brand-900: #064e36;
+  /* Electric citrus — the one colour allowed to raise its voice. */
+  --color-volt-200: #eaffb0;
+  --color-volt-300: #ddfb7c;
+  --color-volt-400: #d0f956;
+  --color-volt-500: #c2ee36;
+  --color-volt-600: #a5cf1c;
+  --color-volt-700: #7fa213;
 
-  /* -- Ink ramp (warm-neutral charcoals, not pure grey) -------------------- */
-  --color-ink-50: #f7f8f8;
-  --color-ink-100: #eceef0;
-  --color-ink-200: #d6dade;
-  --color-ink-300: #b2babf;
-  --color-ink-400: #858f97;
-  --color-ink-500: #64707a;
-  --color-ink-600: #4c5761;
-  --color-ink-700: #3c454e;
-  --color-ink-800: #242b31;
-  --color-ink-900: #171c21;
-  --color-ink-950: #0d1114;
-
-  /* -- Semantic stock states ----------------------------------------------- */
-  --color-stock-in: #10b981;
-  --color-stock-low: #f59e0b;
-  --color-stock-out: #ef4444;
-  --color-stock-unknown: #8b95a1;
-
-  /* -- Motion -------------------------------------------------------------- */
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
-  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
 
-  --animate-rise: rise 0.6s var(--ease-out-expo) both;
-  --animate-fade: fade 0.4s ease-out both;
-  --animate-shimmer: shimmer 1.8s linear infinite;
-  --animate-pulse-ring: pulse-ring 2.4s var(--ease-out-expo) infinite;
-  --animate-drift: drift 22s ease-in-out infinite alternate;
+  --animate-rise: rise 0.55s var(--ease-out-expo) both;
+  --animate-fade: fade 0.35s ease-out both;
+  --animate-shimmer: shimmer 1.7s linear infinite;
+  --animate-sweep: sweep 2.6s ease-in-out infinite;
 }
 
 @keyframes rise {
-  from { opacity: 0; transform: translateY(14px) scale(0.985); }
+  from { opacity: 0; transform: translateY(16px); }
   to   { opacity: 1; transform: none; }
 }
-@keyframes fade {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
+@keyframes fade { from { opacity: 0 } to { opacity: 1 } }
 @keyframes shimmer {
-  from { background-position: -180% 0; }
-  to   { background-position: 180% 0; }
+  from { background-position: -180% 0 }
+  to   { background-position: 180% 0 }
 }
-@keyframes pulse-ring {
-  0%   { opacity: 0.55; transform: scale(1); }
-  70%  { opacity: 0;    transform: scale(2.4); }
-  100% { opacity: 0;    transform: scale(2.4); }
+@keyframes sweep {
+  0%   { transform: translateX(-100%) }
+  60%  { transform: translateX(100%) }
+  100% { transform: translateX(100%) }
 }
-@keyframes drift {
-  from { transform: translate3d(0, 0, 0) scale(1); }
-  to   { transform: translate3d(4%, -6%, 0) scale(1.12); }
+@keyframes markIn {
+  from { transform: scaleX(0) }
+  to   { transform: scaleX(1) }
 }
 
 /* ============================================================================
-   Theme surfaces — semantic vars flip between light and dark.
-   Light is the default; `.dark` on <html> swaps the palette.
+   Themes
    ========================================================================== */
 @layer base {
   :root {
-    --surface-canvas: var(--color-ink-50);
-    --surface-raised: #ffffff;
-    --surface-sunken: #f1f3f5;
-    --surface-overlay: rgba(255, 255, 255, 0.82);
-    --hairline: rgba(23, 28, 33, 0.09);
-    --hairline-strong: rgba(23, 28, 33, 0.16);
-    --text-primary: var(--color-ink-900);
-    --text-secondary: var(--color-ink-600);
-    --text-tertiary: var(--color-ink-400);
-    --glow-a: rgba(16, 185, 129, 0.20);
-    --glow-b: rgba(56, 189, 248, 0.16);
-    --shadow-card: 0 1px 2px rgba(16, 24, 40, 0.04), 0 8px 24px -12px rgba(16, 24, 40, 0.14);
-    --shadow-lift: 0 2px 4px rgba(16, 24, 40, 0.05), 0 20px 44px -16px rgba(16, 24, 40, 0.22);
+    --canvas: #f2f1ec;
+    --canvas-deep: #e8e6df;
+    --raised: #ffffff;
+    --raised-2: #f7f6f2;
+    --sunken: #eceae3;
+    --overlay: rgba(255, 255, 255, 0.72);
+
+    --hairline: rgba(16, 18, 20, 0.10);
+    --hairline-strong: rgba(16, 18, 20, 0.20);
+
+    --text: #101214;
+    --text-2: #55595f;
+    --text-3: #8b8f96;
+
+    /* The accent block is identical in both themes: volt fill, ink text. */
+    --accent: #c2ee36;
+    --accent-hover: #d0f956;
+    --accent-ink: #101214;
+    /* For accent-coloured *text*, which needs contrast against the page. */
+    --accent-text: #5c7a0c;
+
+    --stock-in: #4d7c0f;
+    --stock-low: #b45309;
+    --stock-out: #be123c;
+
+    --ring: rgba(16, 18, 20, 0.16);
+    --shadow-sm: 0 1px 2px rgba(16, 18, 20, 0.05);
+    --shadow-md: 0 2px 4px rgba(16, 18, 20, 0.04), 0 12px 28px -14px rgba(16, 18, 20, 0.22);
+    --shadow-lg: 0 4px 8px rgba(16, 18, 20, 0.05), 0 28px 60px -24px rgba(16, 18, 20, 0.32);
+    --grain-opacity: 0.30;
+    --bloom: color-mix(in srgb, var(--accent) 30%, transparent);
+    --grid-opacity: 0.7;
     color-scheme: light;
   }
 
   .dark {
-    --surface-canvas: #0a0d10;
-    --surface-raised: #13181d;
-    --surface-sunken: #0f1418;
-    --surface-overlay: rgba(19, 24, 29, 0.82);
+    --canvas: #0a0b0c;
+    --canvas-deep: #050506;
+    --raised: #151719;
+    --raised-2: #1b1e21;
+    --sunken: #101214;
+    --overlay: rgba(21, 23, 25, 0.72);
+
     --hairline: rgba(255, 255, 255, 0.09);
-    --hairline-strong: rgba(255, 255, 255, 0.17);
-    --text-primary: #eef1f4;
-    --text-secondary: #9aa5b0;
-    --text-tertiary: #6b7681;
-    --glow-a: rgba(16, 185, 129, 0.26);
-    --glow-b: rgba(56, 189, 248, 0.18);
-    --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4), 0 10px 30px -14px rgba(0, 0, 0, 0.7);
-    --shadow-lift: 0 2px 6px rgba(0, 0, 0, 0.45), 0 24px 50px -18px rgba(0, 0, 0, 0.8);
+    --hairline-strong: rgba(255, 255, 255, 0.18);
+
+    --text: #f3f4f5;
+    --text-2: #9ba1a8;
+    --text-3: #6c7278;
+
+    --accent: #c2ee36;
+    --accent-hover: #d0f956;
+    --accent-ink: #101214;
+    --accent-text: #d0f956;
+
+    --stock-in: #a3e635;
+    --stock-low: #fbbf24;
+    --stock-out: #fb7185;
+
+    --ring: rgba(255, 255, 255, 0.16);
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
+    --shadow-md: 0 2px 6px rgba(0, 0, 0, 0.45), 0 16px 36px -18px rgba(0, 0, 0, 0.8);
+    --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.5), 0 34px 70px -28px rgba(0, 0, 0, 0.95);
+    --grain-opacity: 0.42;
+    --bloom: color-mix(in srgb, var(--accent) 13%, transparent);
+    --grid-opacity: 0.45;
     color-scheme: dark;
   }
 
-  html {
-    -webkit-text-size-adjust: 100%;
-    scroll-behavior: smooth;
-  }
+  html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
 
   body {
-    background-color: var(--surface-canvas);
-    color: var(--text-primary);
+    background-color: var(--canvas);
+    color: var(--text);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     font-feature-settings: 'cv02', 'cv03', 'cv04', 'ss01';
   }
 
-  /* Numbers in prices/counts should never jitter as they update. */
-  .tabular { font-variant-numeric: tabular-nums; }
-
-  ::selection {
-    background: var(--color-brand-400);
-    color: #05110c;
+  /* A whisper of film grain. Without it large flat fields look like plastic. */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    opacity: var(--grain-opacity);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.42'/%3E%3C/svg%3E");
+    mix-blend-mode: overlay;
   }
 
-  /* One consistent focus treatment everywhere. */
+  .tabular { font-variant-numeric: tabular-nums; }
+
+  ::selection { background: var(--accent); color: var(--accent-ink); }
+
   :where(a, button, input, select, textarea, [tabindex]):focus-visible {
-    outline: 2px solid var(--color-brand-500);
+    outline: 2px solid var(--accent);
     outline-offset: 2px;
-    border-radius: 6px;
+    border-radius: 10px;
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -155,45 +167,97 @@
 }
 
 /* ============================================================================
-   Component primitives
+   Primitives
    ========================================================================== */
 @layer components {
-  .surface {
-    background-color: var(--surface-raised);
+  /* Everything above the page sits on this. */
+  .card {
+    background: var(--raised);
     border: 1px solid var(--hairline);
-    box-shadow: var(--shadow-card);
+    border-radius: 18px;
+    box-shadow: var(--shadow-md);
   }
 
-  .hairline { border-color: var(--hairline); }
-
-  /* Frosted panel used for the sticky header and modals. */
   .frost {
-    background-color: var(--surface-overlay);
-    backdrop-filter: saturate(180%) blur(18px);
-    -webkit-backdrop-filter: saturate(180%) blur(18px);
+    background: var(--overlay);
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
   }
 
-  /* Skeleton shimmer that adapts to either theme. */
+  /* Highlighter stroke behind a word — drawn, not typed. */
+  .mark {
+    position: relative;
+    display: inline-block;
+    white-space: nowrap;
+  }
+  .mark > span { position: relative; z-index: 1; }
+  .mark::before {
+    content: '';
+    position: absolute;
+    left: -0.1em;
+    right: -0.1em;
+    top: 0.02em;
+    bottom: -0.03em;
+    background: var(--accent);
+    border-radius: 4px;
+    transform-origin: left center;
+    animation: markIn 0.6s var(--ease-out-expo) 0.25s both;
+    z-index: 0;
+  }
+  .dark .mark > span { color: var(--accent-ink); }
+  .mark > span { color: var(--accent-ink); }
+
+  /* Primary action: volt block, ink label, springy press. */
+  .btn-primary {
+    background: var(--accent);
+    color: var(--accent-ink);
+    border-radius: 12px;
+    font-weight: 650;
+    letter-spacing: -0.01em;
+    box-shadow: var(--shadow-sm);
+    transition: background-color 0.16s ease, transform 0.16s var(--ease-spring);
+  }
+  .btn-primary:hover:not(:disabled) { background: var(--accent-hover); transform: translateY(-1px); }
+  .btn-primary:active:not(:disabled) { transform: translateY(0) scale(0.985); }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .btn-ghost {
+    border: 1px solid var(--hairline);
+    border-radius: 12px;
+    color: var(--text-2);
+    transition: border-color 0.16s ease, color 0.16s ease, background-color 0.16s ease;
+  }
+  .btn-ghost:hover { border-color: var(--hairline-strong); color: var(--text); background: var(--raised-2); }
+
+  .field {
+    background: var(--sunken);
+    border: 1px solid transparent;
+    border-radius: 12px;
+    transition: border-color 0.16s ease, background-color 0.16s ease;
+  }
+  .field:hover { border-color: var(--hairline); }
+  .field:focus-within { border-color: var(--hairline-strong); background: var(--raised); }
+
+  .eyebrow {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--text-3);
+  }
+
   .skeleton {
-    background-image: linear-gradient(
-      90deg,
-      var(--surface-sunken) 0%,
-      var(--hairline) 45%,
-      var(--surface-sunken) 90%
-    );
+    background-image: linear-gradient(90deg, var(--sunken) 0%, var(--hairline) 45%, var(--sunken) 90%);
     background-size: 220% 100%;
     animation: var(--animate-shimmer);
+    border-radius: 8px;
   }
 
-  /* Thin, unobtrusive scrollbars inside dropdown lists. */
-  .scroll-slim {
-    scrollbar-width: thin;
-    scrollbar-color: var(--hairline-strong) transparent;
-  }
+  .scroll-slim { scrollbar-width: thin; scrollbar-color: var(--hairline-strong) transparent; }
   .scroll-slim::-webkit-scrollbar { width: 8px; height: 8px; }
-  .scroll-slim::-webkit-scrollbar-thumb {
-    background: var(--hairline-strong);
-    border-radius: 99px;
-  }
+  .scroll-slim::-webkit-scrollbar-thumb { background: var(--hairline-strong); border-radius: 99px; }
   .scroll-slim::-webkit-scrollbar-track { background: transparent; }
+
+  /* Content must clear the grain layer. */
+  .above-grain { position: relative; z-index: 2; }
 }

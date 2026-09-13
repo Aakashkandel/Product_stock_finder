@@ -18,18 +18,18 @@ export default function AdSlot({ variant = 'leaderboard', className = '' }) {
 
   return (
     <aside
-      className={`ad-slot ${className}`}
+      className={`ad-slot flex ${className}`}
       data-ad-slot={variant}
       aria-label="Advertisement"
     >
       <div
-        className={`flex ${config.className} w-full flex-col items-center justify-center gap-1.5 rounded-2xl border border-dashed px-4 py-5 text-center`}
-        style={{ borderColor: 'var(--hairline-strong)', background: 'var(--surface-sunken)' }}
+        className={`flex ${config.className} w-full flex-1 flex-col items-center justify-center gap-1.5 rounded-2xl border border-dashed px-4 py-5 text-center`}
+        style={{ borderColor: 'var(--hairline-strong)', background: 'var(--sunken)' }}
       >
-        <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--text-tertiary)]">
+        <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--text-3)]">
           Advertisement
         </span>
-        <span className="text-xs text-[var(--text-tertiary)]">{config.label}</span>
+        <span className="text-[11px] text-[var(--text-3)]">{config.label}</span>
       </div>
     </aside>
   )

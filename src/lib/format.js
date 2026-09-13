@@ -7,12 +7,17 @@ export function formatPrice(value, countryCode) {
   const country = getCountry(countryCode)
   if (value === null || value === undefined || Number.isNaN(Number(value))) return '—'
   const amount = Number(value)
+
+  // Big-ticket prices read better rounded to whole units; small ones keep
+  // cents. min and max must agree, or Intl silently emits an odd digit count.
+  const digits = amount >= 1000 ? 0 : amount % 1 === 0 ? 0 : 2
+
   try {
     return new Intl.NumberFormat(country.locale, {
       style: 'currency',
       currency: country.currency,
-      maximumFractionDigits: amount >= 1000 ? 0 : 2,
-      minimumFractionDigits: amount % 1 === 0 ? 0 : 2,
+      minimumFractionDigits: digits,
+      maximumFractionDigits: digits,
     }).format(amount)
   } catch {
     return `${country.symbol}${amount.toLocaleString()}`
@@ -54,21 +59,32 @@ export function getOpenState(hours) {
   const matches = [...text.matchAll(/(\d{1,2})(?::(\d{2}))?\s*(am|pm)?/g)]
   if (matches.length < 2) return null
 
-  const toMinutes = (m, assumePm) => {
-    let h = parseInt(m[1], 10)
+  const parse = (m) => {
+    const h = parseInt(m[1], 10)
     const min = m[2] ? parseInt(m[2], 10) : 0
-    const suffix = m[3]
     if (h > 23 || min > 59) return null
-    if (suffix === 'pm' && h !== 12) h += 12
-    else if (suffix === 'am' && h === 12) h = 0
-    else if (!suffix && assumePm && h < 12) h += 12
-    return h * 60 + min
+    return { h, min, suffix: m[3] }
   }
 
-  const open = toMinutes(matches[0], false)
-  // A closing time without am/pm below 12 almost always means the evening.
-  const close = toMinutes(matches[1], true)
-  if (open === null || close === null) return null
+  const from = parse(matches[0])
+  const to = parse(matches[1])
+  if (!from || !to) return null
+
+  const apply = (t) => {
+    let h = t.h
+    if (t.suffix === 'pm' && h !== 12) h += 12
+    else if (t.suffix === 'am' && h === 12) h = 0
+    return h * 60 + t.min
+  }
+
+  const open = apply(from)
+  let close = apply(to)
+
+  // "10 - 8" means 10am to 8pm. Only assume an evening close when the string is
+  // written in 12-hour style — an opening hour past noon (e.g. "22:00 - 02:00")
+  // means it is already 24-hour, where 02:00 genuinely is 2am.
+  const isTwelveHourStyle = !to.suffix && from.h < 12 && from.h !== 0
+  if (isTwelveHourStyle && to.h < 12) close = (to.h + 12) * 60 + to.min
 
   const now = new Date()
   const mins = now.getHours() * 60 + now.getMinutes()

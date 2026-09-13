@@ -2,7 +2,7 @@
 export default function SkeletonCard({ index = 0 }) {
   return (
     <div
-      className="surface rounded-2xl p-5"
+      className="card p-5 pl-6"
       style={{ animation: `fade 0.4s ease-out ${index * 0.08}s both` }}
       aria-hidden="true"
     >

@@ -1,28 +1,18 @@
-/** Deep links into the user's native maps app. */
-
-function isAppleDevice() {
-  if (typeof navigator === 'undefined') return false
-  return /iPhone|iPad|iPod|Macintosh/.test(navigator.userAgent)
-}
+/** Deep links into Google Maps. */
 
 /**
- * Builds a directions URL for a store, preferring Apple Maps on Apple
- * hardware and Google Maps everywhere else.
+ * Builds a Google Maps directions URL for a store.
+ *
+ * Always Google Maps, on every platform — the universal `maps.google.com`
+ * links open the native app on Android and iOS when it is installed, and the
+ * web map otherwise, so there is no reason to branch on the user agent.
  */
 export function directionsUrl(store, area = '', countryName = '') {
   const destination = [store.name, store.address, area, countryName]
     .filter(Boolean)
     .join(', ')
-  const q = encodeURIComponent(destination)
 
-  return isAppleDevice()
-    ? `https://maps.apple.com/?daddr=${q}`
-    : `https://www.google.com/maps/dir/?api=1&destination=${q}`
-}
-
-/** A plain search (not directions) link — used for the address itself. */
-export function mapSearchUrl(query) {
-  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`
+  return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(destination)}`
 }
 
 /** Copies text to the clipboard, falling back for non-secure contexts. */

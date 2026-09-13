@@ -3,11 +3,13 @@ import Header from './components/Header.jsx'
 import Hero from './components/Hero.jsx'
 import ResultsView from './components/ResultsView.jsx'
 import Footer from './components/Footer.jsx'
-import SettingsModal from './components/SettingsModal.jsx'
+import SetupApi from './components/SetupApi.jsx'
 import Toast from './components/Toast.jsx'
-import { findStock, hasApiKey } from './lib/ai.js'
+import { findStock } from './lib/ai.js'
 import { detectCountry, getCountry } from './lib/locations.js'
 import * as store from './lib/storage.js'
+import { readQueryFromUrl, writeQueryToUrl, clearQueryFromUrl } from './lib/url.js'
+import { currentRoute } from './lib/router.js'
 
 const LOADING_STEP_MS = 1100
 const TOTAL_LOADING_STEPS = 4
@@ -17,7 +19,8 @@ export default function App() {
   const [product, setProduct] = useState('')
   const [countryCode, setCountryCode] = useState(detectCountry)
   const [area, setArea] = useState(() => getCountry(detectCountry()).areas[0])
-  const [detected] = useState(true)
+  // The auto-detection hint is only truthful until the user overrides it.
+  const [detected, setDetected] = useState(true)
 
   /* -- Results ------------------------------------------------------------- */
   const [view, setView] = useState('home') // 'home' | 'results'
@@ -28,8 +31,7 @@ export default function App() {
 
   /* -- Shell --------------------------------------------------------------- */
   const [theme, setThemeState] = useState(store.getTheme)
-  const [apiKey, setApiKeyState] = useState(store.getApiKey)
-  const [settingsOpen, setSettingsOpen] = useState(false)
+  const [route, setRoute] = useState(currentRoute)
   const [recents, setRecents] = useState(store.getRecents)
   const [saved, setSaved] = useState(store.getSaved)
   const [toast, setToast] = useState(null)
@@ -40,6 +42,26 @@ export default function App() {
   useEffect(() => {
     store.setTheme(theme)
   }, [theme])
+
+  // Run a deep-linked search on first load, and keep the back/forward buttons
+  // moving between the landing view and a search.
+  useEffect(() => {
+    const initial = currentRoute() === 'home' ? readQueryFromUrl() : null
+    if (initial) runSearch(initial, { fromHistory: true })
+
+    const onPopState = () => {
+      const nextRoute = currentRoute()
+      setRoute(nextRoute)
+      if (nextRoute !== 'home') return
+
+      const query = readQueryFromUrl()
+      if (query) runSearch(query, { fromHistory: true })
+      else handleGoHome({ fromHistory: true })
+    }
+    window.addEventListener('popstate', onPopState)
+    return () => window.removeEventListener('popstate', onPopState)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // Advance the loading narration while the model works.
   useEffect(() => {
@@ -56,10 +78,11 @@ export default function App() {
   const handleCountryChange = useCallback((code) => {
     setCountryCode(code)
     setArea(getCountry(code).areas[0])
+    setDetected(false)
   }, [])
 
   const runSearch = useCallback(
-    async (query) => {
+    async (query, { fromHistory = false } = {}) => {
       const trimmed = {
         product: query.product.trim(),
         countryCode: query.countryCode,
@@ -71,6 +94,14 @@ export default function App() {
       abortRef.current?.abort()
       const controller = new AbortController()
       abortRef.current = controller
+
+      // Reflect the search in the address bar so it can be shared or bookmarked.
+      // Navigations that came *from* history must not push another entry.
+      if (!fromHistory) writeQueryToUrl(trimmed)
+
+      setProduct(trimmed.product)
+      setCountryCode(trimmed.countryCode)
+      setArea(trimmed.area)
 
       setView('results')
       setLoading(true)
@@ -105,21 +136,13 @@ export default function App() {
     [runSearch]
   )
 
-  const handleSaveKey = useCallback((key) => {
-    store.setApiKey(key)
-    setApiKeyState(key)
-    setToast({
-      type: 'success',
-      message: key ? 'AI connected — your next search runs live.' : 'API key removed. Back to demo mode.',
-    })
-  }, [])
-
   const handleToggleSave = useCallback((id) => {
     setSaved(store.toggleSaved(id))
   }, [])
 
-  const handleGoHome = useCallback(() => {
+  const handleGoHome = useCallback(({ fromHistory = false } = {}) => {
     abortRef.current?.abort()
+    if (!fromHistory) clearQueryFromUrl()
     setLoading(false)
     setView('home')
     window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -137,14 +160,14 @@ export default function App() {
     detected,
   }
 
+  if (route === 'setup') return <SetupApi />
+
   return (
     <div className="flex min-h-screen flex-col">
       <Header
         theme={theme}
         onToggleTheme={() => setThemeState((t) => (t === 'dark' ? 'light' : 'dark'))}
-        onOpenSettings={() => setSettingsOpen(true)}
-        hasKey={hasApiKey()}
-        onGoHome={handleGoHome}
+        onGoHome={() => handleGoHome()}
       />
 
       <main className="flex-1">
@@ -161,7 +184,7 @@ export default function App() {
             loading={loading}
             loadingStep={loadingStep}
             notice={notice}
-            onBack={handleGoHome}
+            onBack={() => handleGoHome()}
             onRetry={handleSearch}
             searchProps={searchProps}
             saved={saved}
@@ -172,13 +195,6 @@ export default function App() {
       </main>
 
       <Footer />
-
-      <SettingsModal
-        open={settingsOpen}
-        initialKey={apiKey}
-        onSave={handleSaveKey}
-        onClose={() => setSettingsOpen(false)}
-      />
 
       <Toast toast={toast} onDismiss={() => setToast(null)} />
     </div>

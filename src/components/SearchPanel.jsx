@@ -1,14 +1,13 @@
 import { useRef } from 'react'
 import AreaCombobox from './AreaCombobox.jsx'
-import { SearchIcon, ChevronIcon, SparkIcon } from './Icons.jsx'
+import { SearchIcon, ChevronIcon } from './Icons.jsx'
 import { COUNTRIES } from '../lib/locations.js'
 
 /**
- * The primary search control: product + country + area.
+ * Product + country + area.
  *
- * Renders as one unified "search bar" card on desktop and a stacked form on
- * mobile. Submitting is blocked (with a focus nudge) until both the product
- * and the area are filled, rather than firing a request that can't succeed.
+ * One raised slab holding three fields and the action, so it reads as a single
+ * instrument rather than a row of loose inputs.
  */
 export default function SearchPanel({
   product,
@@ -34,16 +33,12 @@ export default function SearchPanel({
   }
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className={`surface rounded-2xl ${compact ? 'p-3' : 'p-3 sm:rounded-[26px] sm:p-4'}`}
-      style={{ boxShadow: 'var(--shadow-lift)' }}
-    >
-      <div className="grid gap-2.5 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,0.9fr)_minmax(0,1.1fr)_auto] lg:gap-2">
+    <form onSubmit={handleSubmit} className={`card ${compact ? 'p-2.5' : 'p-2.5 sm:p-3'}`}>
+      <div className="grid gap-2 lg:grid-cols-[minmax(0,1.55fr)_minmax(0,0.9fr)_minmax(0,1.25fr)_auto]">
         {/* Product */}
-        <div className="relative">
+        <div className="field relative">
           <label htmlFor="product" className="sr-only">Product to find</label>
-          <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)]">
+          <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--text-3)]">
             <SearchIcon size={18} />
           </span>
           <input
@@ -54,28 +49,24 @@ export default function SearchPanel({
             onChange={(e) => setProduct(e.target.value)}
             placeholder="What are you looking for?"
             autoComplete="off"
-            className="w-full rounded-xl border py-3.5 pl-11 pr-4 text-[15px] outline-none transition-shadow placeholder:text-[var(--text-tertiary)] focus:ring-2 focus:ring-brand-500/40"
-            style={{ background: 'var(--surface-sunken)', borderColor: 'var(--hairline)' }}
+            className="w-full bg-transparent py-3.5 pl-11 pr-3 text-[15px] font-medium outline-none placeholder:font-normal placeholder:text-[var(--text-3)]"
           />
         </div>
 
         {/* Country */}
-        <div className="relative">
+        <div className="field relative">
           <label htmlFor="country" className="sr-only">Country</label>
           <select
             id="country"
             value={countryCode}
             onChange={(e) => setCountryCode(e.target.value)}
-            className="w-full appearance-none rounded-xl border py-3.5 pl-4 pr-9 text-[15px] outline-none transition-shadow focus:ring-2 focus:ring-brand-500/40"
-            style={{ background: 'var(--surface-sunken)', borderColor: 'var(--hairline)' }}
+            className="w-full appearance-none bg-transparent py-3.5 pl-4 pr-9 text-[15px] font-medium outline-none"
           >
             {COUNTRIES.map((c) => (
-              <option key={c.code} value={c.code}>
-                {c.flag}  {c.name}
-              </option>
+              <option key={c.code} value={c.code}>{c.name}</option>
             ))}
           </select>
-          <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)]">
+          <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-3)]">
             <ChevronIcon size={16} />
           </span>
         </div>
@@ -90,29 +81,31 @@ export default function SearchPanel({
           />
         </div>
 
-        {/* Submit */}
         <button
           type="submit"
           disabled={loading}
-          className="group relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-xl bg-brand-500 px-6 py-3.5 text-[15px] font-bold text-ink-950 shadow-lg shadow-brand-500/25 transition-all duration-200 hover:bg-brand-400 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 lg:px-7"
+          className="btn-primary relative inline-flex items-center justify-center gap-2 overflow-hidden px-7 py-3.5 text-[15px]"
         >
           {loading ? (
             <>
-              <span className="h-4 w-4 animate-spin rounded-full border-2 border-ink-950/25 border-t-ink-950" />
-              Searching
+              {/* A light sweep across the button while the model works. */}
+              <span
+                aria-hidden="true"
+                className="absolute inset-0 animate-[sweep_2.6s_ease-in-out_infinite]"
+                style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.45), transparent)' }}
+              />
+              <span className="relative h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent opacity-60" />
+              <span className="relative">Searching</span>
             </>
           ) : (
-            <>
-              <SparkIcon size={17} />
-              Find Stock
-            </>
+            'Find stock'
           )}
         </button>
       </div>
 
       {detected && !compact && (
-        <p className="mt-3 px-1 text-xs text-[var(--text-tertiary)]">
-          Location auto-detected from your time zone — change it any time.
+        <p className="px-1.5 pb-0.5 pt-2.5 text-[12px] text-[var(--text-3)]">
+          Country set from your time zone — change it any time.
         </p>
       )}
     </form>

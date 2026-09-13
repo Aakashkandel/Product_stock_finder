@@ -1,24 +1,30 @@
 import SearchPanel from './SearchPanel.jsx'
 import RecentSearches from './RecentSearches.jsx'
-import { PRODUCT_SUGGESTIONS, getCountry } from '../lib/locations.js'
-import { SparkIcon, PinIcon, RouteIcon, TagIcon } from './Icons.jsx'
+import { PRODUCT_SUGGESTIONS, getCountry, COUNTRIES } from '../lib/locations.js'
 
-/** Three-up value proposition shown under the fold. */
-const FEATURES = [
+/**
+ * Landing view.
+ *
+ * One oversized statement, a search bar that looks like the point of the page,
+ * and proof underneath. The volt accent appears exactly three times so it
+ * keeps its force.
+ */
+
+const STEPS = [
   {
-    icon: SparkIcon,
-    title: 'AI-read availability',
-    body: 'Qwen 2.5 72B interprets your query and reasons over local retail patterns to estimate what is on the shelf.',
+    n: '01',
+    title: 'Name it and place it',
+    body: 'The product, and the part of town you are in. Your country is read from your time zone.',
   },
   {
-    icon: PinIcon,
-    title: 'Genuinely local',
-    body: 'Results are scoped to the district you pick — not a national catalogue with a postcode stapled on.',
+    n: '02',
+    title: 'The model reads the street',
+    body: 'It works out which chains and independents around there carry the item, and how likely it is to be on the shelf today.',
   },
   {
-    icon: RouteIcon,
-    title: 'One tap to the door',
-    body: 'Every store opens directly in Apple or Google Maps, with opening hours checked against the clock.',
+    n: '03',
+    title: 'Go to the right shop',
+    body: 'Prices, hours, distance and a route — so the trip you make is the one worth making.',
   },
 ]
 
@@ -26,74 +32,63 @@ export default function Hero({ searchProps, recents, onPickRecent, onClearRecent
   const country = getCountry(searchProps.countryCode)
 
   return (
-    <div className="relative overflow-hidden">
-      {/* Ambient gradient field — purely decorative. */}
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10">
+    <div className="above-grain relative overflow-hidden">
+      {/* Depth behind the fold: a soft volt bloom and a fading ruled grid. */}
+      <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[680px]">
         <div
-          className="absolute -top-40 left-1/2 h-[520px] w-[820px] -translate-x-1/2 rounded-full blur-[110px] animate-[drift_22s_ease-in-out_infinite_alternate]"
-          style={{ background: 'var(--glow-a)' }}
+          className="absolute left-1/2 top-[-260px] h-[560px] w-[900px] -translate-x-1/2 rounded-full blur-[130px]"
+          style={{ background: 'var(--bloom)' }}
         />
         <div
-          className="absolute -right-32 top-24 h-[380px] w-[380px] rounded-full blur-[100px]"
-          style={{ background: 'var(--glow-b)' }}
-        />
-        {/* Faint grid to give the space some architecture. */}
-        <div
-          className="absolute inset-0 opacity-[0.55] [mask-image:radial-gradient(ellipse_at_top,black,transparent_72%)]"
+          className="absolute inset-0 [mask-image:linear-gradient(to_bottom,black,transparent_72%)]"
           style={{
+            opacity: 'var(--grid-opacity)',
             backgroundImage:
               'linear-gradient(to right, var(--hairline) 1px, transparent 1px), linear-gradient(to bottom, var(--hairline) 1px, transparent 1px)',
-            backgroundSize: '56px 56px',
+            backgroundSize: '64px 64px',
           }}
         />
       </div>
 
-      <div className="mx-auto max-w-5xl px-4 pb-8 pt-14 sm:px-6 sm:pt-20 lg:pt-24">
-        {/* Eyebrow */}
-        <div className="flex justify-center">
-          <span
-            className="inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-xs font-semibold ring-1 ring-inset ring-brand-500/25 animate-[rise_0.5s_var(--ease-out-expo)_both]"
-            style={{ background: 'rgba(16,185,129,0.10)', color: 'var(--color-brand-600)' }}
-          >
-            <span className="relative flex h-1.5 w-1.5">
-              <span className="absolute inset-0 rounded-full bg-brand-500 animate-[pulse-ring_2.4s_var(--ease-out-expo)_infinite]" />
-              <span className="relative h-1.5 w-1.5 rounded-full bg-brand-500" />
-            </span>
-            Powered by Qwen 2.5 72B
+      <div className="mx-auto max-w-6xl px-5 pb-20 pt-14 sm:px-6 sm:pt-20">
+        {/* Status line, not a badge. */}
+        <div className="flex items-center gap-2.5 animate-[fade_0.5s_ease-out_both]">
+          <span className="relative flex h-2 w-2">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full opacity-60" style={{ background: 'var(--accent)' }} />
+            <span className="relative inline-flex h-2 w-2 rounded-full" style={{ background: 'var(--accent)' }} />
           </span>
+          <span className="eyebrow">Live local stock lookup</span>
         </div>
 
-        {/* Headline */}
-        <h1
-          className="mt-6 text-balance text-center text-[2.6rem] font-bold leading-[1.05] tracking-[-0.03em] animate-[rise_0.6s_var(--ease-out-expo)_0.05s_both] sm:text-6xl lg:text-[4.25rem]"
-        >
-          Stop driving store to store.
-          <br />
-          <span className="font-display font-normal italic text-brand-500">Know</span>{' '}
-          <span className="text-[var(--text-primary)]">before you go.</span>
+        {/* Statement */}
+        <h1 className="mt-7 max-w-[15ch] font-display text-[3.1rem] font-extrabold leading-[0.94] tracking-[-0.035em] animate-[rise_0.6s_var(--ease-out-expo)_0.05s_both] sm:max-w-[16ch] sm:text-[5rem] lg:text-[6.5rem]">
+          Know who has it.{' '}
+          <span className="mark">
+            <span>Skip</span>
+          </span>{' '}
+          the drive.
         </h1>
 
-        <p className="mx-auto mt-5 max-w-xl text-balance text-center text-[17px] leading-relaxed text-[var(--text-secondary)] animate-[rise_0.6s_var(--ease-out-expo)_0.12s_both]">
-          Tell StockScout what you need and where you are. It reads local retail
-          the way a well-connected friend would — and tells you which shops
-          actually have it.
+        <p className="mt-7 max-w-lg text-[17px] leading-[1.6] text-[var(--text-2)] animate-[rise_0.6s_var(--ease-out-expo)_0.12s_both] sm:text-[19px]">
+          Name the thing you are after and the part of town you are in.
+          StockScout works out which shops nearby actually have it, what it
+          should cost, and whether the door is open right now.
         </p>
 
-        {/* Search */}
-        <div className="mt-9 animate-[rise_0.6s_var(--ease-out-expo)_0.18s_both]">
+        {/* Search — z-index keeps its dropdown above everything after it. */}
+        <div className="relative z-30 mt-10 animate-[rise_0.6s_var(--ease-out-expo)_0.18s_both]">
           <SearchPanel {...searchProps} />
         </div>
 
-        {/* Quick product chips */}
-        <div className="mt-5 flex flex-wrap items-center justify-center gap-2 animate-[rise_0.6s_var(--ease-out-expo)_0.24s_both]">
-          <span className="mr-1 text-xs font-medium text-[var(--text-tertiary)]">Popular:</span>
+        {/* Suggestions */}
+        <div className="relative z-10 mt-5 flex flex-wrap items-center gap-2 animate-[rise_0.6s_var(--ease-out-expo)_0.24s_both]">
+          <span className="mr-1 text-[13px] font-medium text-[var(--text-3)]">Try</span>
           {PRODUCT_SUGGESTIONS.slice(0, 6).map((item) => (
             <button
               key={item}
               type="button"
               onClick={() => searchProps.setProduct(item)}
-              className="rounded-full px-3 py-1.5 text-xs font-medium text-[var(--text-secondary)] ring-1 ring-inset transition-all hover:-translate-y-0.5 hover:text-brand-600 hover:ring-brand-500/40"
-              style={{ background: 'var(--surface-raised)', borderColor: 'var(--hairline)' }}
+              className="btn-ghost rounded-full px-3.5 py-1.5 text-[13px] font-medium"
             >
               {item}
             </button>
@@ -104,31 +99,36 @@ export default function Hero({ searchProps, recents, onPickRecent, onClearRecent
           <RecentSearches items={recents} onPick={onPickRecent} onClear={onClearRecents} />
         )}
 
-        {/* Feature trio */}
-        <div className="mt-20 grid gap-4 sm:mt-24 sm:grid-cols-3">
-          {FEATURES.map(({ icon: Icon, title, body }, i) => (
-            <div
-              key={title}
-              className="surface rounded-2xl p-5 transition-transform duration-300 hover:-translate-y-1"
-              style={{ animation: `rise 0.6s var(--ease-out-expo) ${0.3 + i * 0.07}s both` }}
-            >
-              <span className="grid h-10 w-10 place-items-center rounded-xl bg-brand-500/12 text-brand-600 dark:text-brand-400">
-                <Icon size={19} />
-              </span>
-              <h3 className="mt-3.5 text-[15px] font-bold tracking-tight">{title}</h3>
-              <p className="mt-1.5 text-sm leading-relaxed text-[var(--text-secondary)]">{body}</p>
-            </div>
-          ))}
+        {/* Coverage figure — concrete, not a marketing claim. */}
+        <div className="mt-20 grid gap-10 border-t pt-10 sm:grid-cols-[auto_1fr] sm:gap-16" style={{ borderColor: 'var(--hairline)' }}>
+          <div>
+            <p className="font-display text-[3.5rem] font-extrabold leading-none tracking-[-0.04em]">
+              {COUNTRIES.length}
+            </p>
+            <p className="mt-2 text-[13px] leading-snug text-[var(--text-3)]">
+              countries, each with its
+              <br />
+              own districts and currency
+            </p>
+          </div>
+
+          <div className="grid gap-8 sm:grid-cols-3">
+            {STEPS.map((step) => (
+              <div key={step.n}>
+                <span className="tabular text-[12px] font-bold tracking-widest" style={{ color: 'var(--accent-text)' }}>
+                  {step.n}
+                </span>
+                <h3 className="mt-2.5 font-display text-[17px] font-bold tracking-tight">{step.title}</h3>
+                <p className="mt-1.5 text-[14px] leading-[1.6] text-[var(--text-2)]">{step.body}</p>
+              </div>
+            ))}
+          </div>
         </div>
 
-        {/* Honesty note — estimates, not a live inventory feed. */}
-        <p className="mx-auto mt-10 flex max-w-xl items-start gap-2 text-center text-xs leading-relaxed text-[var(--text-tertiary)]">
-          <TagIcon size={14} className="mt-0.5 shrink-0" />
-          <span className="text-left">
-            StockScout gives AI-estimated availability based on typical stocking
-            patterns in {country.name} — not a live till feed. Always call ahead
-            before making a special trip.
-          </span>
+        <p className="mt-12 max-w-2xl text-[13px] leading-relaxed text-[var(--text-3)]">
+          Availability is estimated from how shops in {country.name} usually
+          stock and sell, not read from a till. Treat it as a well-informed
+          shortlist and ring ahead before a special trip.
         </p>
       </div>
     </div>

@@ -17,24 +17,24 @@ export default function Toast({ toast, onDismiss }) {
     <div
       role="status"
       aria-live="polite"
-      className="fixed inset-x-0 bottom-6 z-50 flex justify-center px-4 animate-[rise_0.35s_var(--ease-out-expo)_both]"
+      className="fixed inset-x-0 bottom-6 z-50 flex justify-center px-4 animate-[rise_0.3s_var(--ease-out-expo)_both]"
     >
       <div
-        className="flex max-w-md items-start gap-3 rounded-2xl px-4 py-3 shadow-2xl ring-1 ring-inset"
+        className="flex max-w-md items-start gap-3 rounded-2xl border px-4 py-3"
         style={{
-          background: 'var(--surface-raised)',
+          background: 'var(--raised)',
           borderColor: 'var(--hairline)',
-          boxShadow: 'var(--shadow-lift)',
+          boxShadow: 'var(--shadow-lg)',
         }}
       >
-        <span className={isError ? 'mt-0.5 text-rose-500' : 'mt-0.5 text-brand-500'}>
+        <span className="mt-0.5 shrink-0" style={{ color: isError ? 'var(--stock-out)' : 'var(--stock-in)' }}>
           {isError ? <AlertIcon size={18} /> : <CheckIcon size={18} />}
         </span>
-        <p className="text-sm leading-snug text-[var(--text-primary)]">{toast.message}</p>
+        <p className="text-sm leading-snug text-[var(--text)]">{toast.message}</p>
         <button
           onClick={onDismiss}
           aria-label="Dismiss notification"
-          className="-mr-1 mt-0.5 text-[var(--text-tertiary)] transition-colors hover:text-[var(--text-primary)]"
+          className="-mr-1 mt-0.5 text-[var(--text-3)] transition-colors hover:text-[var(--text)]"
         >
           <CloseIcon size={16} />
         </button>

@@ -47,3 +47,6 @@ Requirements:
 3. Results View: Render the returned store data into clean, modern cards showing store name, location/address, stock status badge (In Stock / Low Stock), price, and a "Get Directions" button.
 4. Ad Slots: Include clean, marked placeholder sections (`<div class="ad-slot">...</div>`) inside the layout for future ad monetization (banner and sidebar ads).
 5. Architecture: Keep it entirely static (no backend database required). Write modular, well-commented code.
+---
+
+_Original project brief, preserved from `read.me`. The implementation notes now live in [../README.md](../README.md)._
