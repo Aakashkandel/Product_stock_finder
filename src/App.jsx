@@ -115,7 +115,7 @@ export default function App() {
       if (controller.signal.aborted) return
 
       setResult(response.data)
-      setNotice(response.notice)
+      setNotice(response.error || '')
       setLoading(false)
       setRecents(store.addRecent(trimmed))
     },

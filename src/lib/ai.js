@@ -160,10 +160,18 @@ export async function findStock(query, { signal } = {}) {
       return { data: null, error: null, cancelled: true }
     }
 
+    // `fetch` itself throws a raw browser TypeError ("Failed to fetch",
+    // "NetworkError when attempting to fetch resource") for anything from a
+    // dropped connection to a CORS failure — never useful to show verbatim.
+    // Every message *we* threw above (describeHttpError, the JSON-parse
+    // failure) is a plain Error, so this distinguishes "our words" from
+    // "the browser's words" without an allowlist of exact strings.
     const message =
       error.name === 'AbortError'
         ? 'The AI took too long to respond. Try again.'
-        : error.message || 'Could not reach the AI service. Try again.'
+        : error instanceof TypeError
+          ? 'Could not reach OpenRouter — check your connection and try again.'
+          : error.message || 'Could not reach the AI service. Try again.'
 
     return { data: null, error: message }
   } finally {

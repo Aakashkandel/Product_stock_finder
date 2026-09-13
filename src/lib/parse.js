@@ -79,7 +79,6 @@ export function normalize(raw, query) {
   if (!stores.length) throw new Error('The model returned no usable store data.')
 
   return {
-    demo: false,
     query,
     summary: typeof raw.summary === 'string' ? raw.summary.trim() : '',
     tip: typeof raw.tip === 'string' ? raw.tip.trim() : '',

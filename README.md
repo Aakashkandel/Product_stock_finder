@@ -17,8 +17,9 @@ npm install
 npm run dev      # http://localhost:5173
 ```
 
-The app works immediately on **sample data**. To run real AI lookups, set up
-the admin gate and add a key — see [API key setup](#api-key-setup).
+There is no fake or sample data mode. Until a real API key is configured,
+searches show a plain "not configured yet" message with a link to
+[API key setup](#api-key-setup) — never invented stores.
 
 ```bash
 npm run build    # static output in dist/
@@ -37,7 +38,7 @@ User query ─► buildUserPrompt() ─► OpenRouter (nvidia/nemotron-3-super-1
                                           │
                                    (any failure)
                                           ▼
-                              generateMockResults()  ← deterministic demo data
+                              honest error state, no stores shown
 ```
 
 The AI is asked for one strict JSON object. Because models don't always
@@ -48,9 +49,11 @@ comply, `src/lib/parse.js` handles the output defensively:
 - clamps confidence to 0–100 and maps unknown statuses to `unknown`
 - drops malformed stores rather than letting one crash a card
 
-**A search never dead-ends.** No key, a bad key, a rate limit, a timeout, a
-network failure or unparseable output all fall back to deterministic demo data
-with a plain-language explanation and a Retry button.
+**Real data or nothing — never fake data.** No key, a bad key, a rate limit, a
+timeout, a network failure or unparseable output all show the same thing: a
+plain-language explanation of what went wrong and a "Try again" button. There
+is no synthetic fallback data anywhere in the app; a result you see always
+came from a live model response.
 
 ### API key setup
 
@@ -120,10 +123,9 @@ src/
 ├── lib/
 │   ├── ai.js                OpenRouter client, prompt, error mapping
 │   ├── parse.js             JSON extraction + normalisation  (pure, tested)
-│   ├── mockData.js          deterministic demo generator
 │   ├── locations.js         countries, districts, timezone detection
 │   ├── format.js            currency, distance, opening-hours logic
-│   ├── maps.js              Apple/Google directions, clipboard
+│   ├── maps.js              Google Maps directions, clipboard
 │   ├── storage.js           guarded localStorage wrapper
 │   └── url.js               search state <-> query string
 └── components/              Header, Hero, SearchPanel, AreaCombobox,
